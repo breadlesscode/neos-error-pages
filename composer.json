@@ -1,0 +1,18 @@
+{
+    "description": "",
+    "type": "neos-package",
+    "name": "breadlesscode/errorpages",
+    "require": {
+        "neos/flow": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Breadlesscode\\ErrorPages\\": "Classes/"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "Breadlesscode.ErrorPages"
+        }
+    }
+}

@@ -1,0 +1,2 @@
+prototype(Breadlesscode.ErrorPages:Page) >
+prototype(Breadlesscode.ErrorPages:Page) < prototype(Neos.NodeTypes:Page)

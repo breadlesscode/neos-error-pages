@@ -1,0 +1,18 @@
+'Breadlesscode.ErrorPages:Page':
+  superTypes:
+    'Neos.NodeTypes:Page': true
+  properties:
+    statusCodes:
+      type: array
+      ui:
+        label: 'i18n'
+        inspector:
+          group: 'document'
+          editor: 'Content/Inspector/Editors/SelectBoxEditor'
+          editorOptions:
+            multiple: true
+            values:
+              404:
+                label: '404'
+              410:
+                label: '410'

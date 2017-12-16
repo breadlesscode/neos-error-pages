@@ -1,0 +1,9 @@
+Neos:
+  Flow:
+    error:
+      exceptionHandler:
+        renderingGroups:
+          notFoundExceptions:
+            matchingStatusCodes: [ 404, 410 ]
+            options:
+              templatePathAndFilename: 'resource://Breadlesscode.ErrorPages/Private/Templates/ErrorPage.html'
