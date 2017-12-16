@@ -7,12 +7,9 @@ use Neos\Eel\FlowQuery\FlowQuery;
 use Neos\Flow\Annotations as Flow;
 use Neos\Neos\View\FusionView;
 
-function dd($v) {
-  \Neos\Flow\var_dump($v);
-}
-
 class PageViewHelper extends AbstractViewHelper
 {
+    const ERROR_PAGE_TYPE = 'Breadlesscode.ErrorPages:Page';
     /**
      * @Flow\Inject
      * @var ContextFactoryInterface
@@ -23,24 +20,38 @@ class PageViewHelper extends AbstractViewHelper
     {
         $statusCode = $exception->getStatusCode();
         $request = $this->controllerContext->getRequest();
-        $context = $this->getContext();
-        $flowQuery = new FlowQuery([ $context->getNode('/') ]);
-        $errorPages = $flowQuery->find('[instanceof Breadlesscode.ErrorPages:Page]')->get();
-        $correctErrorPage = null;
-        $view = new FusionView();
-
-
+        $errorPages = $this->getErrorPages();
+        $pageToRender = null;
+        // find the correct error page
         foreach ($errorPages as $errorPage) {
             $supportedStatusCodes = $errorPage->getProperty('statusCodes');
             if(!$supportedStatusCodes !== null && \in_array($statusCode, $supportedStatusCodes))
-                $correctErrorPage = $errorPage;
+                $pageToRender = $errorPage;
         }
-        dd($correctErrorPage->getPath());
+
+        if($pageToRender === null)
+            throw new \Exception("Please setup a error page of type ".self::ERROR_PAGE_TYPE."!", 1);
+
+        // render error page
+        $view = new FusionView();
         $view->setControllerContext($this->controllerContext);
-        $view->assign('value', $correctErrorPage);
+        $view->assign('value', $pageToRender);
+
         return $view->render();
     }
+    /**
+     * collects all error pages from the site
+     *
+     * @return array    collection of error pages
+     */
+    protected function getErrorPages()
+    {
+        $context = $this->getContext();
 
+        return (new FlowQuery([ $context->getNode('/') ]))
+            ->find('[instanceof '. self::ERROR_PAGE_TYPE .']')
+            ->get();
+    }
     /**
      * creating context for node search
      *
