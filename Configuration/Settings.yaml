@@ -1,4 +1,9 @@
 Neos:
+  Neos:
+    userInterface:
+      translation:
+        autoInclude:
+          'Breadlesscode.ErrorPages': ['NodeTypes/*']
   Flow:
     error:
       exceptionHandler:

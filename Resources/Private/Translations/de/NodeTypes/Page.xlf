@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file original="" product-name="Breadlesscode.ErrorPages" source-language="en" datatype="plaintext">
+        <body>
+            <trans-unit id="ui.help.message" xml:space="preserve">
+                <source>Dieser Seitentyp ist zum anzeigen von HTTP-Fehlern wie Fehler 404 (Seite nicht gefunden) </source>
+            </trans-unit>
+            <trans-unit id="ui.label" xml:space="preserve">
+                <source>Fehlerseite</source>
+            </trans-unit>
+            <trans-unit id="properties.statusCodes" xml:space="preserve">
+                <source>HTTP-Fehlercodes</source>
+            </trans-unit>
+            <trans-unit id="properties.statusCodes.ui.help.message" xml:space="preserve">
+                <source>Hier können die HTTP-Fehler gewählt werden auf die diese Seite reagieren soll.
+* 404 - Seite nicht gefunden
+* 410 - Diese Seite steht nicht länger zur Verfügung
+                </source>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
