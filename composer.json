@@ -2,6 +2,14 @@
     "description": "",
     "type": "neos-package",
     "name": "breadlesscode/errorpages",
+    "authors": [
+        {
+            "name": "Marvin Kuhn",
+            "email": "git@kuhnweblab.com",
+            "homepage": "https://kuhnweblab.com/",
+            "role": "Developer"
+        }
+    ],
     "require": {
         "neos/flow": "*"
     },
