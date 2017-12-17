@@ -1,12 +1,16 @@
 'Breadlesscode.ErrorPages:Page':
   superTypes:
     'Neos.NodeTypes:Page': true
+    'Neos.Neos:Hidable': false
+    'Neos.Neos:Timable': false
   ui:
     label: 'i18n'
     icon: 'icon-bug'
     help:
       message: 'i18n'
   properties:
+    _hiddenInIndex:
+      defaultValue: true
     statusCodes:
       type: array
       ui:
