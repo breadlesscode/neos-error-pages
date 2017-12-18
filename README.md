@@ -17,3 +17,7 @@ composer require breadlesscode/neos-error-pages
 1. Create your error page in your dimension.
 2. Select the correct status codes in the NEOS inspector. 
 3. Publish
+
+## Todo
+[ ] Multiple error pages. Select nearest error page
+[ ] Write some tests (as always...)
