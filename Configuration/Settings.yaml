@@ -4,6 +4,9 @@ Neos:
       translation:
         autoInclude:
           'Breadlesscode.ErrorPages': ['NodeTypes/*']
+    fusion:
+      autoInclude:
+        'Breadlesscode.ErrorPages': true
   Flow:
     error:
       exceptionHandler:
