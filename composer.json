@@ -1,6 +1,6 @@
 {
     "type": "neos-package",
-    "name": "breadlesscode/errorpages",
+    "name": "breadlesscode/neos-error-pages",
     "authors": [
         {
             "name": "Marvin Kuhn",
