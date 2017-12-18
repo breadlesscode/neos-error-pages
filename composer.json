@@ -10,7 +10,8 @@
         }
     ],
     "require": {
-        "neos/flow": "*"
+        "neos/flow": "*",
+        "tightenco/collect": "^5.5"
     },
     "autoload": {
         "psr-4": {
