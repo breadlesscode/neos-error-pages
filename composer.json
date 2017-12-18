@@ -1,5 +1,5 @@
 {
-    "type": "neos-package",
+    "type": "neos-plugin",
     "name": "breadlesscode/neos-error-pages",
     "authors": [
         {
