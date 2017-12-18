@@ -19,5 +19,5 @@ composer require breadlesscode/neos-error-pages
 3. Publish
 
 ## Todo
-[ ] Multiple error pages. Select nearest error page
-[ ] Write some tests (as always...)
+- [ ] Multiple error pages. Select nearest error page
+- [ ] Write some tests (as always...)
