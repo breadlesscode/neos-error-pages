@@ -1,5 +1,4 @@
 {
-    "description": "",
     "type": "neos-package",
     "name": "breadlesscode/errorpages",
     "authors": [
