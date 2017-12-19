@@ -1,5 +1,6 @@
 {
     "type": "neos-plugin",
+    "license": "MIT",
     "name": "breadlesscode/neos-error-pages",
     "authors": [
         {
