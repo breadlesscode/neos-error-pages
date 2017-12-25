@@ -18,7 +18,8 @@
     "autoload": {
         "psr-4": {
             "Breadlesscode\\ErrorPages\\": "Classes/"
-        }
+        },
+        "files": [ "./helper.php" ]
     },
     "extra": {
         "neos": {
