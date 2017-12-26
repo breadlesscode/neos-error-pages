@@ -7,59 +7,8 @@ use Neos\Eel\FlowQuery\FlowQuery;
 use Neos\Flow\Annotations as Flow;
 use Neos\FluidAdaptor\Core\ViewHelper\AbstractViewHelper;
 use Neos\Neos\Routing\FrontendNodeRoutePartHandler;
-use Neos\Neos\Domain\Service\ContentDimensionPresetSourceInterface;
 use Neos\Neos\View\FusionView;
-
-if (!function_exists('cutLastPartOfPath')) {
-
-    function cutLastPartOfPath($path, $delimiter = '/')
-    {
-        $pos = strrpos($path, $delimiter);
-
-        if ($pos === false || $pos === 1) {
-            return null;
-        }
-
-        return substr($path, 0, $pos);
-    }
-}
-
-if (!function_exists('path2array')) {
-
-    function path2array($path, $delimiter = '/')
-    {
-        $array = [$path];
-
-        while ($path = cutLastPartOfPath($path))
-        {
-            $array[] = $path;
-        }
-
-        if (\end($array) !== "") {
-            $array[] = '';
-        }
-        return $array;
-    }
-}
-
-if (!function_exists('comparePaths')) {
-
-    function comparePaths($pathOne, $pathTwo, $delimiter = '/')
-    {
-        $pathOne = path2array($pathOne);
-        $pathTwo = path2array($pathTwo);
-
-        for ($distance = 0; $distance < count($pathOne); $distance++) {
-            for ($p2index = 0; $p2index < count($pathTwo); $p2index++) {
-                if ($pathOne[$distance] === $pathTwo[$p2index]) {
-                    return $distance + $p2index;
-                }
-            }
-        }
-
-        return -1;
-    }
-}
+use Breadlesscode\ErrorPages\Utility\PathUtility;
 
 class PageViewHelper extends AbstractViewHelper
 {
@@ -83,19 +32,20 @@ class PageViewHelper extends AbstractViewHelper
      */
     protected $supportEmptySegmentForDimensions;
     /**
-     * @Flow\Inject
-     * @var ContentDimensionPresetSourceInterface
-     */
-    protected $contentDimensionPresetSource;
-    /**
      * @param  Neos\Flow\Mvc\Controller\Exception\InvalidControllerException $exception
      * @return string
      */
     public function render($exception)
     {
-        $statusCode = $exception->getStatusCode();
-        $dimension = $this->getCurrentDimension();
-        $errorPage = $this->findErrorPage($statusCode, $dimension);
+        $requestPath = PathUtility::cutLastPart(
+            $this->controllerContext
+                ->getRequest()
+                ->getHttpRequest()
+                ->getUri()
+                ->getPath()
+        );
+        $errorPage = $this->findErrorPage($requestPath, $exception->getStatusCode());
+
         if ($errorPage === null) {
             throw new \Exception("Please setup a error page of type ".self::ERROR_PAGE_TYPE."!", 1);
         }
@@ -114,17 +64,11 @@ class PageViewHelper extends AbstractViewHelper
      * @param  string $dimension
      * @return Neos\ContentRepository\Domain\Model\Node
      */
-    protected function findErrorPage($statusCode, $dimension)
+    protected function findErrorPage($requestPath, $statusCode)
     {
+        $dimension = $this->getDimensionOfPath($requestPath);
         $errorPages = collect($this->getErrorPages($dimension));
         $statusCode = (string) $statusCode;
-        $requestPath = cutLastPartOfPath(
-            $this->controllerContext
-                ->getRequest()
-                ->getHttpRequest()
-                ->getUri()
-                ->getPath()
-        );
         // find the correct error page
         $errorPages = $errorPages
             // filter invalid status codes
@@ -138,9 +82,9 @@ class PageViewHelper extends AbstractViewHelper
             })
             // filter all pages which not in the correct path
             ->sortBy(function ($page) use ($requestPath, $dimension) {
-                return comparePaths(
+                return PathUtility::compare(
                     $this->getPathWithoutDimensionPrefix($requestPath),
-                    cutLastPartOfPath($this->getPathWithoutDimensionPrefix($this->getUriOfNode($page)))
+                    PathUtility::cutLastPart($this->getPathWithoutDimensionPrefix($this->getUriOfNode($page)))
                 );
             });
         return $errorPages->first();
@@ -199,11 +143,10 @@ class PageViewHelper extends AbstractViewHelper
      *
      * @return string   dimension preset key
      */
-    protected function getCurrentDimension()
+    protected function getDimensionOfPath($path)
     {
         $matches = [];
-        $requestPath = $this->controllerContext->getRequest()->getHttpRequest()->getUri()->getPath();
-        preg_match(FrontendNodeRoutePartHandler::DIMENSION_REQUEST_PATH_MATCHER, ltrim($requestPath, '/'), $matches);
+        preg_match(FrontendNodeRoutePartHandler::DIMENSION_REQUEST_PATH_MATCHER, ltrim($path, '/'), $matches);
 
         $presets = collect($this->contentDimensionsConfig['presets'])
             ->filter(function ($value, $key) use ($matches) {
