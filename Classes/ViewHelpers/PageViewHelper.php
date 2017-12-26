@@ -1,13 +1,14 @@
 <?php
 namespace Breadlesscode\ErrorPages\ViewHelpers;
 
-use Neos\FluidAdaptor\Core\ViewHelper\AbstractViewHelper;
+use Neos\ContentRepository\Domain\Model\Node;
 use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;
 use Neos\Eel\FlowQuery\FlowQuery;
 use Neos\Flow\Annotations as Flow;
-use Neos\Neos\View\FusionView;
+use Neos\FluidAdaptor\Core\ViewHelper\AbstractViewHelper;
 use Neos\Neos\Routing\FrontendNodeRoutePartHandler;
-
+use Neos\Neos\View\FusionView;
+use Breadlesscode\ErrorPages\Utility\PathUtility;
 
 class PageViewHelper extends AbstractViewHelper
 {
@@ -36,11 +37,16 @@ class PageViewHelper extends AbstractViewHelper
      */
     public function render($exception)
     {
-        $statusCode = $exception->getStatusCode();
-        $dimension = $this->getCurrentDimension();
-        $errorPage = $this->findErrorPage($statusCode, $dimension);
+        $requestPath = PathUtility::cutLastPart(
+            $this->controllerContext
+                ->getRequest()
+                ->getHttpRequest()
+                ->getUri()
+                ->getPath()
+        );
+        $errorPage = $this->findErrorPage($requestPath, $exception->getStatusCode());
 
-        if($errorPage === null) {
+        if ($errorPage === null) {
             throw new \Exception("Please setup a error page of type ".self::ERROR_PAGE_TYPE."!", 1);
         }
         // render error page
@@ -58,23 +64,49 @@ class PageViewHelper extends AbstractViewHelper
      * @param  string $dimension
      * @return Neos\ContentRepository\Domain\Model\Node
      */
-    protected function findErrorPage($statusCode, $dimension)
+    protected function findErrorPage($requestPath, $statusCode)
     {
+        $dimension = $this->getDimensionOfPath($requestPath);
         $errorPages = collect($this->getErrorPages($dimension));
         $statusCode = (string) $statusCode;
         // find the correct error page
-        return $errorPages
+        $errorPages = $errorPages
             // filter invalid status codes
-            ->filter(function($page) use($statusCode) {
+            ->filter(function ($page) use ($statusCode) {
                 $supportedStatusCodes = $page->getProperty('statusCodes');
-
                 return $supportedStatusCodes !== null && \in_array($statusCode, $supportedStatusCodes);
             })
             // filter invalid dimensions
-            ->filter(function($page) use($dimension) {
+            ->filter(function ($page) use ($dimension) {
                 return \in_array($dimension, $page->getDimensions()['language']);
             })
-            ->first();
+            // filter all pages which not in the correct path
+            ->sortBy(function ($page) use ($requestPath, $dimension) {
+                return PathUtility::compare(
+                    $this->getPathWithoutDimensionPrefix($requestPath),
+                    PathUtility::cutLastPart($this->getPathWithoutDimensionPrefix($this->getUriOfNode($page)))
+                );
+            });
+        return $errorPages->first();
+    }
+    /**
+     * return path without the dimension prefix
+     *
+     * @param  string $path
+     * @param  string $dimension
+     * @return string
+     */
+    protected function getPathWithoutDimensionPrefix($path)
+    {
+        $presets = collect($this->contentDimensionsConfig['presets']);
+        $matches = [];
+        preg_match(FrontendNodeRoutePartHandler::DIMENSION_REQUEST_PATH_MATCHER, ltrim($path, '/'), $matches);
+
+        if ($presets->pluck('uriSegment')->contains($matches['firstUriPart'])) {
+            return substr(ltrim($path, '/'), strlen($matches['firstUriPart']));
+        }
+
+        return $path;
     }
     /**
      * collects all error pages from the site
@@ -111,14 +143,13 @@ class PageViewHelper extends AbstractViewHelper
      *
      * @return string   dimension preset key
      */
-    protected function getCurrentDimension()
+    protected function getDimensionOfPath($path)
     {
         $matches = [];
-        $requestPath = ltrim($this->controllerContext->getRequest()->getHttpRequest()->getUri()->getPath(), '/');
-        preg_match(FrontendNodeRoutePartHandler::DIMENSION_REQUEST_PATH_MATCHER, $requestPath, $matches);
+        preg_match(FrontendNodeRoutePartHandler::DIMENSION_REQUEST_PATH_MATCHER, ltrim($path, '/'), $matches);
 
         $presets = collect($this->contentDimensionsConfig['presets'])
-            ->filter(function($value, $key) use($matches) {
+            ->filter(function ($value, $key) use ($matches) {
                 $uriSegment = data_get($value, 'uriSegment');
                 return (
                     $uriSegment !== null && (
@@ -128,15 +159,32 @@ class PageViewHelper extends AbstractViewHelper
                 );
             });
 
-        if($presets->count() > 0) {
+        if ($presets->count() > 0) {
             return $presets->keys()->first();
         }
 
-        if($this->supportEmptySegmentForDimensions) {
+        if ($this->supportEmptySegmentForDimensions) {
             return $this->contentDimensionsConfig['defaultPreset'];
         }
 
         return null;
     }
+    /**
+     * get the uri of a node
+     *
+     * @param  Node   $node
+     * @return string
+     */
+    protected function getUriOfNode(Node $node)
+    {
+        static $uriBuilder = null;
 
+        if ($uriBuilder === null) {
+            $uriBuilder = $this->controllerContext->getUriBuilder();
+            $uriBuilder->setRequest($this->controllerContext->getRequest()->getMainRequest());
+            $uriBuilder->reset();
+        }
+
+        return $uriBuilder->uriFor('show', ['node' => $node], 'Frontend\\Node', 'Neos.Neos');
+    }
 }
