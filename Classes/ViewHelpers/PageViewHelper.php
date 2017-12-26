@@ -10,13 +10,13 @@ use Neos\Neos\Routing\FrontendNodeRoutePartHandler;
 use Neos\Neos\Domain\Service\ContentDimensionPresetSourceInterface;
 use Neos\Neos\View\FusionView;
 
-if(!function_exists('cutLastPartOfPath')) {
+if (!function_exists('cutLastPartOfPath')) {
 
     function cutLastPartOfPath($path, $delimiter = '/')
     {
         $pos = strrpos($path, $delimiter);
 
-        if($pos === false || $pos === 1) {
+        if ($pos === false || $pos === 1) {
             return null;
         }
 
@@ -24,35 +24,35 @@ if(!function_exists('cutLastPartOfPath')) {
     }
 }
 
-if(!function_exists('path2array')) {
+if (!function_exists('path2array')) {
 
     function path2array($path, $delimiter = '/')
     {
         $array = [$path];
 
-        while($path = cutLastPartOfPath($path))
+        while ($path = cutLastPartOfPath($path))
         {
             $array[] = $path;
         }
 
+        if (\end($array) !== "") {
+            $array[] = '';
+        }
         return $array;
     }
 }
 
-if(!function_exists('comparePaths')) {
+if (!function_exists('comparePaths')) {
 
     function comparePaths($pathOne, $pathTwo, $delimiter = '/')
     {
-
-        var_dump("Compare: ", $pathOne, $pathTwo);
         $pathOne = path2array($pathOne);
         $pathTwo = path2array($pathTwo);
 
-
-        for($distance = 0;$distance < count($pathOne);$distance++) {
-            for($p2index = 0;$p2index < count($pathTwo);$p2index++) {
-                if($pathOne[$distance] === $pathTwo[$p2index]) {
-                    return $distance;
+        for ($distance = 0; $distance < count($pathOne); $distance++) {
+            for ($p2index = 0; $p2index < count($pathTwo); $p2index++) {
+                if ($pathOne[$distance] === $pathTwo[$p2index]) {
+                    return $distance + $p2index;
                 }
             }
         }
@@ -60,9 +60,6 @@ if(!function_exists('comparePaths')) {
         return -1;
     }
 }
-
-
-
 
 class PageViewHelper extends AbstractViewHelper
 {
@@ -85,7 +82,6 @@ class PageViewHelper extends AbstractViewHelper
      * @var boolean
      */
     protected $supportEmptySegmentForDimensions;
-
     /**
      * @Flow\Inject
      * @var ContentDimensionPresetSourceInterface
@@ -100,8 +96,7 @@ class PageViewHelper extends AbstractViewHelper
         $statusCode = $exception->getStatusCode();
         $dimension = $this->getCurrentDimension();
         $errorPage = $this->findErrorPage($statusCode, $dimension);
-        exit();
-        if($errorPage === null) {
+        if ($errorPage === null) {
             throw new \Exception("Please setup a error page of type ".self::ERROR_PAGE_TYPE."!", 1);
         }
         // render error page
@@ -123,7 +118,7 @@ class PageViewHelper extends AbstractViewHelper
     {
         $errorPages = collect($this->getErrorPages($dimension));
         $statusCode = (string) $statusCode;
-        $requestPath = cutLastPartOfPath( // cut firts and last part
+        $requestPath = cutLastPartOfPath(
             $this->controllerContext
                 ->getRequest()
                 ->getHttpRequest()
@@ -133,17 +128,20 @@ class PageViewHelper extends AbstractViewHelper
         // find the correct error page
         $errorPages = $errorPages
             // filter invalid status codes
-            ->filter(function($page) use($statusCode) {
+            ->filter(function ($page) use ($statusCode) {
                 $supportedStatusCodes = $page->getProperty('statusCodes');
                 return $supportedStatusCodes !== null && \in_array($statusCode, $supportedStatusCodes);
             })
             // filter invalid dimensions
-           ->filter(function($page) use($dimension) {
+            ->filter(function ($page) use ($dimension) {
                 return \in_array($dimension, $page->getDimensions()['language']);
             })
             // filter all pages which not in the correct path
-            ->sortBy(function($page) use($requestPath, $dimension) {
-                return comparePaths($requestPath, $this->getPathWithoutDimensionPrefix($this->getUriOfNode($page),$dimension));
+            ->sortBy(function ($page) use ($requestPath, $dimension) {
+                return comparePaths(
+                    $this->getPathWithoutDimensionPrefix($requestPath),
+                    cutLastPartOfPath($this->getPathWithoutDimensionPrefix($this->getUriOfNode($page)))
+                );
             });
         return $errorPages->first();
     }
@@ -154,12 +152,14 @@ class PageViewHelper extends AbstractViewHelper
      * @param  string $dimension
      * @return string
      */
-    protected function getPathWithoutDimensionPrefix($path, $dimension)
+    protected function getPathWithoutDimensionPrefix($path)
     {
-        $uriPrefix = $this->contentDimensionsConfig['presets'][$dimension]['uriSegment'];
+        $presets = collect($this->contentDimensionsConfig['presets']);
+        $matches = [];
+        preg_match(FrontendNodeRoutePartHandler::DIMENSION_REQUEST_PATH_MATCHER, ltrim($path, '/'), $matches);
 
-        if(substr(ltrim($path, '/'), 0, strlen($uriPrefix)) === $uriPrefix) {
-            return substr(ltrim($path, '/'), strlen($uriPrefix));
+        if ($presets->pluck('uriSegment')->contains($matches['firstUriPart'])) {
+            return substr(ltrim($path, '/'), strlen($matches['firstUriPart']));
         }
 
         return $path;
@@ -206,7 +206,7 @@ class PageViewHelper extends AbstractViewHelper
         preg_match(FrontendNodeRoutePartHandler::DIMENSION_REQUEST_PATH_MATCHER, ltrim($requestPath, '/'), $matches);
 
         $presets = collect($this->contentDimensionsConfig['presets'])
-            ->filter(function($value, $key) use($matches) {
+            ->filter(function ($value, $key) use ($matches) {
                 $uriSegment = data_get($value, 'uriSegment');
                 return (
                     $uriSegment !== null && (
@@ -216,11 +216,11 @@ class PageViewHelper extends AbstractViewHelper
                 );
             });
 
-        if($presets->count() > 0) {
+        if ($presets->count() > 0) {
             return $presets->keys()->first();
         }
 
-        if($this->supportEmptySegmentForDimensions) {
+        if ($this->supportEmptySegmentForDimensions) {
             return $this->contentDimensionsConfig['defaultPreset'];
         }
 
@@ -236,53 +236,12 @@ class PageViewHelper extends AbstractViewHelper
     {
         static $uriBuilder = null;
 
-        if($uriBuilder === null) {
+        if ($uriBuilder === null) {
             $uriBuilder = $this->controllerContext->getUriBuilder();
             $uriBuilder->setRequest($this->controllerContext->getRequest()->getMainRequest());
             $uriBuilder->reset();
-            \Neos\Flow\var_dump($this->getUriSegmentForDimensions($node->getContext()->getDimensions(), false));
         }
 
         return $uriBuilder->uriFor('show', ['node' => $node], 'Frontend\\Node', 'Neos.Neos');
-    }
-        /**
-     * Find a URI segment in the content dimension presets for the given "language" dimension values
-     *
-     * This will do a reverse lookup from actual dimension values to a preset and fall back to the default preset if none
-     * can be found.
-     *
-     * @param array $dimensionsValues An array of dimensions and their values, indexed by dimension name
-     * @param boolean $currentNodeIsSiteNode If the current node is actually the site node
-     * @return string
-     * @throws \Exception
-     */
-    protected function getUriSegmentForDimensions(array $dimensionsValues, $currentNodeIsSiteNode)
-    {
-        $uriSegment = '';
-        $allDimensionPresetsAreDefault = true;
-
-        foreach ($this->contentDimensionPresetSource->getAllPresets() as $dimensionName => $dimensionPresets) {
-            $preset = null;
-            if (isset($dimensionsValues[$dimensionName])) {
-                $preset = $this->contentDimensionPresetSource->findPresetByDimensionValues($dimensionName, $dimensionsValues[$dimensionName]);
-            }
-            $defaultPreset = $this->contentDimensionPresetSource->getDefaultPreset($dimensionName);
-            if ($preset === null) {
-                $preset = $defaultPreset;
-            }
-            if ($preset !== $defaultPreset) {
-                $allDimensionPresetsAreDefault = false;
-            }
-            if (!isset($preset['uriSegment'])) {
-                throw new \Exception(sprintf('No "uriSegment" configured for content dimension preset "%s" for dimension "%s". Please check the content dimension configuration in Settings.yaml', $preset['identifier'], $dimensionName), 1395824520);
-            }
-            $uriSegment .= $preset['uriSegment'] . '_';
-        }
-
-        if ($this->supportEmptySegmentForDimensions && $allDimensionPresetsAreDefault && $currentNodeIsSiteNode) {
-            return '/';
-        } else {
-            return ltrim(trim($uriSegment, '_') . '/', '/');
-        }
     }
 }
