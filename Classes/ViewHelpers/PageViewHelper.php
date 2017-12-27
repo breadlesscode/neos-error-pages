@@ -32,7 +32,7 @@ class PageViewHelper extends AbstractViewHelper
      */
     protected $supportEmptySegmentForDimensions;
     /**
-     * @param  Neos\Flow\Mvc\Controller\Exception\InvalidControllerException $exception
+     * @param  Neos\Flow\Mvc\Exception\NoMatchingRouteException $exception
      * @return string
      */
     public function render($exception)
