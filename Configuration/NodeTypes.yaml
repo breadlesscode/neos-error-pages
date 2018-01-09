@@ -1,6 +1,6 @@
 'Breadlesscode.ErrorPages:Page':
   superTypes:
-    'Neos.NodeTypes:Page': true
+    'Neos.Neos:Document': true
     'Neos.Neos:Hidable': false
     'Neos.Neos:Timable': false
   ui:
