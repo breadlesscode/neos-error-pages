@@ -79,7 +79,7 @@ class PageViewHelper extends AbstractViewHelper
             ->filter(function ($page) use ($dimension) {
                 return \in_array($dimension, $page->getDimensions()['language']);
             })
-            // filter all pages which not in the correct path
+            // sort by distance
             ->sortBy(function ($page) use ($requestPath, $dimension) {
                 return PathUtility::compare(
                     $this->getPathWithoutDimensionPrefix($requestPath),
@@ -101,7 +101,7 @@ class PageViewHelper extends AbstractViewHelper
         $matches = [];
         preg_match(FrontendNodeRoutePartHandler::DIMENSION_REQUEST_PATH_MATCHER, ltrim($path, '/'), $matches);
 
-        if ($presets->pluck('uriSegment')->contains($matches['firstUriPart'])) {
+        if (isset($matches['firstUriPart']) && $presets->pluck('uriSegment')->contains($matches['firstUriPart'])) {
             return substr(ltrim($path, '/'), strlen($matches['firstUriPart']));
         }
 
