@@ -27,6 +27,6 @@
             multiple: true
             values:
               404:
-                label: '404'
+                label: '404 - Not Found'
               410:
-                label: '410'
+                label: '410 – Gone'
