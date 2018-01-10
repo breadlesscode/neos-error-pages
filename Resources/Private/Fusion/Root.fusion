@@ -1,3 +1,5 @@
 prototype(Breadlesscode.ErrorPages:Page) >
-prototype(Breadlesscode.ErrorPages:Page) < prototype(Neos.NodeTypes:Page) {
+prototype(Breadlesscode.ErrorPages:Page) < prototype(Neos.Neos:Page) {
 }
+# default fusion path for neos error pages
+errorPages = Breadlesscode.ErrorPages:Page

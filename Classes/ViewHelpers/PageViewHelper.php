@@ -51,7 +51,7 @@ class PageViewHelper extends AbstractViewHelper
         // render error page
         $view = new FusionView();
         $view->setControllerContext($this->controllerContext);
-        $view->setFusionPath('default');
+        $view->setFusionPath('errorPages');
         $view->assign('value', $errorPage);
 
         return $view->render();
