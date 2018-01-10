@@ -46,7 +46,7 @@ class PageViewHelper extends AbstractViewHelper
         $errorPage = $this->findErrorPage($requestPath, $exception->getStatusCode());
 
         if ($errorPage === null) {
-            throw new \Exception("Please setup a error page of type ".self::ERROR_PAGE_TYPE."!", 1);
+            throw new \Exception("Please setup a error page of type ".self::ERROR_PAGE_TYPE." in your page root!", 1);
         }
         // render error page
         $view = new FusionView();
@@ -69,7 +69,7 @@ class PageViewHelper extends AbstractViewHelper
         $errorPages = collect($this->getErrorPages($dimension));
         $statusCode = (string) $statusCode;
         // find the correct error page
-        $errorPages = $errorPages
+        return $errorPages
             // filter invalid status codes
             ->filter(function ($page) use ($statusCode) {
                 $supportedStatusCodes = $page->getProperty('statusCodes');
@@ -79,14 +79,21 @@ class PageViewHelper extends AbstractViewHelper
             ->filter(function ($page) use ($dimension) {
                 return \in_array($dimension, $page->getDimensions()['language']);
             })
+            // remove pages which are not in the path
+            ->reject(function ($page) use ($requestPath, $dimension) {
+                return PathUtility::compare(
+                    $this->getPathWithoutDimensionPrefix($requestPath),
+                    PathUtility::cutLastPart($this->getPathWithoutDimensionPrefix($this->getUriOfNode($page)))
+                ) === null;
+            })
             // sort by distance
             ->sortBy(function ($page) use ($requestPath, $dimension) {
                 return PathUtility::compare(
                     $this->getPathWithoutDimensionPrefix($requestPath),
                     PathUtility::cutLastPart($this->getPathWithoutDimensionPrefix($this->getUriOfNode($page)))
                 );
-            });
-        return $errorPages->first();
+            })
+            ->first();
     }
     /**
      * return path without the dimension prefix
