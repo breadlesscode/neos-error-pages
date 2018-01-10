@@ -30,16 +30,13 @@ class PathUtility
     public static function compare($pathOne, $pathTwo, $delimiter = '/')
     {
         $pathOne = self::path2array($pathOne);
-        $pathTwo = self::path2array($pathTwo);
 
         for ($distance = 0; $distance < count($pathOne); $distance++) {
-            for ($p2index = 0; $p2index < count($pathTwo); $p2index++) {
-                if ($pathOne[$distance] === $pathTwo[$p2index]) {
-                    return $distance + $p2index;
-                }
+            if ($pathOne[$distance] === $pathTwo) {
+                return $distance;
             }
         }
 
-        return -1;
+        return null;
     }
 }
