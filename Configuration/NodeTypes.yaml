@@ -8,9 +8,6 @@
     icon: 'icon-bug'
     help:
       message: 'i18n'
-  childNodes:
-    main:
-      type: 'Neos.Neos:ContentCollection'
   properties:
     _hiddenInIndex:
       defaultValue: true
