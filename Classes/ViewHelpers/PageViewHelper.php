@@ -77,7 +77,7 @@ class PageViewHelper extends AbstractViewHelper
             })
             // filter invalid dimensions
             ->filter(function ($page) use ($dimension) {
-                return \in_array($dimension, $page->getDimensions()['language']);
+                return $dimension !== null ? \in_array($dimension, $page->getDimensions()['language']) : true;
             })
             // remove pages which are not in the path
             ->reject(function ($page) use ($requestPath, $dimension) {
@@ -134,15 +134,22 @@ class PageViewHelper extends AbstractViewHelper
      */
     protected function getContext($dimension)
     {
-        return $this->contextFactory->create([
+        $context = [
             'workspaceName' => 'live',
             'currentDateTime' => new \Neos\Flow\Utility\Now(),
-            'dimensions' => ['language' => [$dimension, $this->contentDimensionsConfig['defaultPreset']]],
-            'targetDimensions' =>  ['language' => $dimension],
+            'dimensions' => [],
+            'targetDimensions' =>  [],
             'invisibleContentShown' => true,
             'removedContentShown' => false,
             'inaccessibleContentShown' => false
-        ]);
+        ];
+
+        if ($dimension !== null) {
+            $context['dimensions']['language'] = [$dimension, $this->contentDimensionsConfig['defaultPreset']];
+            $context['targetDimensions']['language'][] = $dimension;
+        }
+
+        return $this->contextFactory->create($context);
     }
     /**
      * get the current dimension preset key
