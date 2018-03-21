@@ -12,6 +12,6 @@ Neos:
       exceptionHandler:
         renderingGroups:
           notFoundExceptions:
-            matchingStatusCodes: [ 404, 410 ]
+            matchingStatusCodes: [ 403, 404, 410 ]
             options:
               templatePathAndFilename: 'resource://Breadlesscode.ErrorPages/Private/Templates/ErrorPage.html'

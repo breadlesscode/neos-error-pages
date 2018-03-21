@@ -23,6 +23,8 @@
           editorOptions:
             multiple: true
             values:
+              403:
+                label: '403 - Forbidden'
               404:
                 label: '404 - Not Found'
               410:
