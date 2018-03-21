@@ -146,7 +146,7 @@ class PageViewHelper extends AbstractViewHelper
 
         if ($dimension !== null) {
             $context['dimensions']['language'] = [$dimension, $this->contentDimensionsConfig['defaultPreset']];
-            $context['targetDimensions']['language'][] = $dimension;
+            $context['targetDimensions']['language'] = $dimension;
         }
 
         return $this->contextFactory->create($context);
