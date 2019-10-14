@@ -1,3 +1,5 @@
+# Deprecated in Neos 5 <br /> Please use Fusion error page rendering instead
+
 # Neos error pages
 
 [![Latest Stable Version](https://poser.pugx.org/breadlesscode/neos-error-pages/v/stable)](https://packagist.org/packages/breadlesscode/neos-error-pages)
